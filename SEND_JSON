@@ -1,0 +1,29 @@
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <ArduinoJson.h>
+
+HardwareSerial mySerial(1);  // Use Serial1 (or configure pins as needed)
+
+void setup() {
+  Serial.begin(115200);      // Debugging output
+  mySerial.begin(9600, SERIAL_8N1, 16, 17);  // UART pins (RX, TX)
+}
+
+void loop() {
+  // Create a JSON object
+  StaticJsonDocument<200> doc;
+  doc["command"] = "READY_ACK";
+  doc["mac_id"] = "00:1A:2B:3C:4D:5E";
+
+  // Serialize JSON to a string
+  String output;
+  serializeJson(doc, output);
+  
+  // Send the JSON string over UART
+  mySerial.println(output);
+  
+  // Debug output to monitor the data being sent
+  Serial.println("Sent: " + output);
+  
+  delay(1000);  // Delay for demonstration purposes
+}
