@@ -1,0 +1,46 @@
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <ArduinoJson.h>
+
+HardwareSerial mySerial(1);  // Use Serial1 for UART communication (or configure pins as needed)
+
+String input;
+
+void setup() {
+  Serial.begin(115200);      // Debugging output (Serial Monitor)
+  mySerial.begin(9600, SERIAL_8N1, 16, 17);  // UART pins (RX, TX)
+  Serial.println("Enter JSON data in Serial Monitor, for example: {\"command\":\"READY_ACK\",\"mac_id\":\"00:1A:2B:3C:4D:5E\"}");
+}
+
+void loop() {
+  // Check if data is available in Serial Monitor
+  if (Serial.available()) {
+    // Read the incoming JSON string from the Serial Monitor
+    input = Serial.readStringUntil('\n');
+    
+    // Deserialize the JSON string
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc, input);
+    
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.c_str());
+      return;
+    }
+    
+    // Extract values from the deserialized JSON
+    const char* command = doc["command"];  // "READY_ACK"
+    const char* mac_id = doc["mac_id"];    // "00:1A:2B:3C:4D:5E"
+    
+    // Print the deserialized values to Serial Monitor
+    Serial.println("Deserialized JSON:");
+    Serial.print("Command: ");
+    Serial.println(command);
+    Serial.print("MAC ID: ");
+    Serial.println(mac_id);
+    
+    // Send the JSON string to STM32 over UART
+    mySerial.println(input);
+    Serial.println("Sent JSON to STM32");
+  }
+}
